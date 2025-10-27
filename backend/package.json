@@ -1,0 +1,32 @@
+{
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "quiz burst backend",
+    "keywords": [
+        "quiz",
+        "burst",
+        "saas"
+    ],
+    "homepage": "https://github.com/lucky-03Sharma/quiz_burst/readme",
+    "bugs": {
+        "url": "https://github.com/lucky-03Sharma/quiz_burst/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lucky-03Sharma/quiz_burst.git"
+    },
+    "license": "ISC",
+    "author": "Lucky",
+    "type": "module",
+    "main": "server.js",
+    "scripts": {
+        "test": "node server.js"
+    },
+    "dependencies": {
+        "dotenv": "^17.2.2",
+        "express": "^5.1.0",
+        "http": "^0.0.1-security",
+        "mongoose": "^8.18.1",
+        "socket.io": "^4.8.1"
+    }
+}
