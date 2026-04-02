@@ -1,8 +1,8 @@
 import express from "express";
-import { createQuiz, getQuizByCode, getAllQuizzes } from "../controllers/quizController.js";
-import { createGame, getGameByCode, updateGameStatus } from "../controllers/gameController.js";
-import { addPlayer, updateScore } from "../controllers/playerController.js";
-// import { endGame, getLeaderboard } from "../controllers/hostController.js";
+import { createQuiz, getQuizByCode, getAllQuizzes } from "../contollers/quizController.js";
+import { createGame, getGameByCode, updateGameStatus } from "../contollers/gameController.js";
+import { addPlayer, updateScore } from "../contollers/playerContoller.js";
+import { endGame, getLeaderboard } from "../contollers/hostController.js";
 
 const router = express.Router();
 

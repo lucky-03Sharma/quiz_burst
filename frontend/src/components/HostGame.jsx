@@ -1,6 +1,23 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE } from '../config/api';
+import SelectDropdown from './SelectDropdown';
+
+const CATEGORY_FILTER_OPTIONS = [
+    { value: '', label: 'All Categories' },
+    { value: 'science', label: 'Science' },
+    { value: 'sports', label: 'Sports' },
+    { value: 'tech', label: 'Technology' },
+    { value: 'history', label: 'History' },
+];
+
+const DIFFICULTY_FILTER_OPTIONS = [
+    { value: '', label: 'All Levels' },
+    { value: 'easy', label: 'Easy' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'hard', label: 'Hard' },
+];
 
 const HostGameCreate = () => {
     const [quizzes, setQuizzes] = useState([]);
@@ -14,14 +31,15 @@ const HostGameCreate = () => {
     const [preview, setPreview] = useState(null);
     const [confirmVisible, setConfirmVisible] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const fetchQuizzes = async () => {
             setLoading(true);
             try {
-                const res = await axios.get('http://localhost:5000/quiz/');
-                setQuizzes(res.data.quizzes);
-                setFiltered(res.data.quizzes);
+                const res = await axios.get(`${API_BASE}/`);
+                setQuizzes(res.data.quizzes || []);
+                setFiltered(res.data.quizzes || []);
             } catch (err) {
                 console.error('Failed to fetch quizzes', err);
             } finally {
@@ -31,15 +49,23 @@ const HostGameCreate = () => {
         fetchQuizzes();
     }, []);
 
+    useEffect(() => {
+        const createdId = location.state?.createdQuizId;
+        if (!createdId || quizzes.length === 0) return;
+        const found = quizzes.find((q) => String(q._id) === String(createdId));
+        if (found) {
+            setSelectedQuiz(String(found._id));
+            setPreview(found);
+        }
+    }, [location.state, quizzes]);
+
     const handleCreateGame = async () => {
         if (!hostName || !selectedQuiz) return alert('Enter name and select a quiz');
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:5000/create', {
+            const res = await axios.post(`${API_BASE}/create-game`, {
                 quizId: selectedQuiz,
                 host: hostName,
-                category,
-                difficulty
             });
             navigate(`/host-game-live/${res.data.game.gameCode}`);
         } catch (err) {
@@ -58,8 +84,8 @@ const HostGameCreate = () => {
     };
 
     const handlePreview = (id) => {
-        const quiz = quizzes.find(q => q._id === id);
-        setPreview(quiz);
+        const quiz = quizzes.find((q) => String(q._id) === String(id));
+        setPreview(quiz || null);
     };
 
     const handleConfirm = () => {
@@ -67,10 +93,45 @@ const HostGameCreate = () => {
         setTimeout(() => setConfirmVisible(false), 2500);
     };
 
+    const quizSelectOptions = [
+        { value: '', label: loading ? 'Loading quizzes…' : '-- Select a Quiz --' },
+        ...filtered.map((q) => ({
+            value: String(q._id),
+            label: `${q.title} (${q.questionCount ?? q.questions?.length ?? 0} Qs)`,
+        })),
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center py-10 px-6">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-                <h1 className="text-2xl font-semibold text-center mb-6">Create a Game Session</h1>
+        <div className="min-h-screen flex flex-col justify-center items-center py-14 px-6">
+            <div className="w-full max-w-lg glass-card shadow-lg rounded-3xl border border-white/20 p-8">
+                <h1 className="text-3xl md:text-4xl font-bold text-white text-center mb-6">Create a Game Session</h1>
+
+                <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-slate-200/80 text-center sm:text-left">
+                        New here? <span className="text-white font-medium">Create a quiz</span> first, then select it below.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => navigate('/quiz/new')}
+                        className="btn-gradient px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap"
+                    >
+                        + Create quiz
+                    </button>
+                </div>
+
+                {!loading && quizzes.length === 0 && (
+                    <div className="mb-5 rounded-xl border border-amber-400/35 bg-amber-950/25 p-4 text-amber-100 text-sm">
+                        <p className="font-semibold text-amber-50 mb-1">No quizzes in the database yet</p>
+                        <p className="text-amber-100/85 mb-3">You need at least one quiz before you can host.</p>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/quiz/new')}
+                            className="btn-gradient px-4 py-2 rounded-lg text-sm"
+                        >
+                            Create your first quiz
+                        </button>
+                    </div>
+                )}
                 
                 <div className="mb-4">
                     <input
@@ -78,7 +139,7 @@ const HostGameCreate = () => {
                         value={hostName}
                         onChange={(e) => setHostName(e.target.value)}
                         placeholder="Enter your name"
-                        className="w-full border border-gray-300 rounded-lg p-3"
+                        className="w-full border border-white/20 bg-white/5 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-cyan-400 focus:outline-none"
                     />
                 </div>
 
@@ -88,64 +149,54 @@ const HostGameCreate = () => {
                         placeholder="Search quizzes"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg p-3"
+                        className="flex-1 border border-white/20 bg-white/5 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-cyan-400 focus:outline-none"
                     />
                     <button
                         onClick={handleFilter}
-                        className="bg-blue-600 text-white px-4 rounded-lg"
+                        className="btn-gradient px-4 py-2 rounded-xl text-white hover:brightness-105 transition"
                     >
                         Search
                     </button>
                 </div>
 
                 <div className="mb-4 flex gap-2">
-                    <select
+                    <SelectDropdown
+                        className="flex-1"
                         value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg p-3"
-                    >
-                        <option value="">All Categories</option>
-                        <option value="science">Science</option>
-                        <option value="sports">Sports</option>
-                        <option value="tech">Technology</option>
-                        <option value="history">History</option>
-                    </select>
-                    <select
+                        onChange={setCategory}
+                        options={CATEGORY_FILTER_OPTIONS}
+                    />
+                    <SelectDropdown
+                        className="flex-1"
                         value={difficulty}
-                        onChange={(e) => setDifficulty(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg p-3"
-                    >
-                        <option value="">All Levels</option>
-                        <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                    </select>
+                        onChange={setDifficulty}
+                        options={DIFFICULTY_FILTER_OPTIONS}
+                    />
                 </div>
 
-                <div className="mb-6">
-                    <select
+                <div className="mb-2">
+                    <label className="block text-sm font-medium text-slate-200 mb-2">Choose quiz to host</label>
+                    <SelectDropdown
                         value={selectedQuiz}
-                        onChange={(e) => {
-                            setSelectedQuiz(e.target.value);
-                            handlePreview(e.target.value);
+                        onChange={(id) => {
+                            setSelectedQuiz(id);
+                            if (id) handlePreview(id);
+                            else setPreview(null);
                         }}
-                        className="w-full border border-gray-300 rounded-lg p-3"
-                    >
-                        <option value="">-- Select a Quiz --</option>
-                        {filtered.map((q) => (
-                            <option key={q._id} value={q._id}>
-                                {q.title} ({q.questionCount} Qs)
-                            </option>
-                        ))}
-                    </select>
+                        options={quizSelectOptions}
+                        disabled={!quizzes.length && !loading}
+                    />
                 </div>
+                {!loading && quizzes.length > 0 && filtered.length === 0 && (
+                    <p className="text-amber-200/90 text-sm mb-4">No quizzes match your filters. Try &quot;All Categories&quot; / &quot;All Levels&quot;.</p>
+                )}
 
                 {preview && (
-                    <div className="bg-gray-100 rounded-lg p-4 mb-4 text-sm">
-                        <p className="font-medium">{preview.title}</p>
-                        <p className="text-gray-600 mt-1">Category: {preview.category || 'General'}</p>
-                        <p className="text-gray-600">Difficulty: {preview.difficulty || 'Mixed'}</p>
-                        <p className="text-gray-600 mt-2">Total Questions: {preview.questionCount}</p>
+                    <div className="bg-white/5 border border-white/15 rounded-lg p-4 mb-4 text-sm">
+                        <p className="font-semibold text-white">{preview.title}</p>
+                        <p className="text-slate-200/80 mt-1">Category: {preview.category || 'General'}</p>
+                        <p className="text-slate-200/80">Difficulty: {preview.difficulty || 'Mixed'}</p>
+                        <p className="text-slate-200/80 mt-2">Total Questions: {preview.questionCount}</p>
                     </div>
                 )}
 
@@ -155,32 +206,34 @@ const HostGameCreate = () => {
                         handleCreateGame();
                     }}
                     disabled={loading}
-                    className={`w-full py-3 rounded-lg font-medium transition ${
-                        loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
+                    className={`w-full py-3 rounded-xl font-medium transition ${
+                        loading
+                            ? 'bg-slate-300 cursor-not-allowed text-slate-600'
+                            : 'btn-gradient hover:brightness-105 text-white'
+                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300`}
                 >
                     {loading ? 'Creating...' : 'Create Game'}
                 </button>
 
                 {confirmVisible && (
-                    <div className="mt-4 bg-green-50 text-green-700 border border-green-300 rounded-lg p-3 text-center">
+                    <div className="mt-4 bg-emerald-900/20 text-emerald-200 border border-emerald-200/30 rounded-lg p-3 text-center">
                         Game setup in progress...
                     </div>
                 )}
             </div>
 
-            <div className="mt-8 w-full max-w-2xl grid grid-cols-2 gap-4">
+            <div className="mt-8 w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filtered.slice(0, 4).map((q) => (
-                    <div key={q._id} className="bg-white p-4 shadow-md rounded-lg flex flex-col items-start hover:shadow-lg transition">
-                        <p className="font-semibold text-gray-800">{q.title}</p>
-                        <p className="text-gray-500 text-sm mt-1">{q.category || 'General'}</p>
-                        <p className="text-gray-400 text-xs mt-1">{q.difficulty || 'Mixed'} | {q.questionCount} Questions</p>
+                    <div key={q._id} className="glass-card rounded-xl p-4 border border-white/15 shadow-sm transition hover:shadow-md">
+                        <p className="font-semibold text-white text-lg">{q.title}</p>
+                        <p className="text-slate-200/80 text-sm mt-1">{q.category || 'General'}</p>
+                        <p className="text-slate-200/60 text-xs mt-1">{q.difficulty || 'Mixed'} | {q.questionCount} Questions</p>
                         <button
                             onClick={() => {
-                                setSelectedQuiz(q._id);
+                                setSelectedQuiz(String(q._id));
                                 handlePreview(q._id);
                             }}
-                            className="mt-3 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm"
+                            className="mt-3 px-3 py-2 rounded-lg btn-gradient text-white hover:brightness-105"
                         >
                             Select
                         </button>

@@ -11,12 +11,23 @@
 ### Project Guides
 1. PROF. RAMYA PRABHAKARAN  [ Primary Guide ] 
 
-### Deployment Steps
-Please follow the below steps to run this project.
-1. Step 1 here
-2. Step 2 here
-3. Step 3 here
-3. and so on...
+### Run locally (development)
+
+1. **MongoDB:** Create a cluster (MongoDB Atlas) and copy a connection string.
+2. **Backend:** From `backend/`, copy `.env.example` to `.env` and set `ATLAS_URL` and optional `PORT` (default `5000`).
+3. **Backend install & start:**
+   - `cd backend`
+   - `npm install`
+   - `node server.js`  
+   The API is served at `http://localhost:5000/api/quiz`.
+4. **Frontend:** From `frontend/`:
+   - `npm install`
+   - `npm run dev`  
+   Open the URL shown (usually `http://127.0.0.1:5173`).
+5. **Flow:** On the home page use **Create quiz & host** to save a quiz, then host a session; players join with the game code.
+
+### Deployment Steps (production)
+Build the frontend with `npm run build` inside `frontend/`, deploy the `dist/` output to static hosting, and set the frontend API base if the backend URL is not `http://localhost:5000` (see `frontend/src/config/api.js`).
 
 ### Subject Details
 - Class : TE (COMP) Div A - 2025-2026

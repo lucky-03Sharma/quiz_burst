@@ -1,0 +1,13 @@
+# Secrets
+.env
+.env.local
+backend/.env
+
+# Dependencies / build
+node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log

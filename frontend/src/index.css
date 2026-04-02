@@ -28,27 +28,34 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: radial-gradient(circle at 10% 20%, #1a305f 0%, #0f172a 55%, #020617 100%);
+  color: #f8fafc;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Verdana, sans-serif;
+}
+
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 1.5rem;
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: clamp(1.8rem, 4vw, 3rem);
   line-height: 1.1;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  border-radius: 10px;
+  border: 0;
+  padding: 0.75em 1.4em;
+  font-size: 1rem;
+  font-weight: 600;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
 }
 button:hover {
   border-color: #646cff;

@@ -2,11 +2,17 @@ import Quiz from "../models/quiz.js";
 
 export const createQuiz = async (req, res) => {
     try {
-        const { title, questions } = req.body;
+        const { title, questions, category, difficulty } = req.body;
         const code = Math.random().toString(36).substring(2, 8);
-        const quiz = new Quiz({ title, questions, code, createdAt: new Date() });
+        const quiz = new Quiz({
+            title,
+            questions: questions || [],
+            code,
+            category: category || "",
+            difficulty: difficulty || "",
+        });
         await quiz.save();
-        res.status(201).json({ message: "Quiz created successfully", code });
+        res.status(201).json({ message: "Quiz created successfully", code, quiz });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -25,7 +31,14 @@ export const getQuizByCode = async (req, res) => {
 export const getAllQuizzes = async (req, res) => {
     try {
         const quizzes = await Quiz.find().sort({ createdAt: -1 });
-        res.status(200).json({ quizzes });
+        const payload = quizzes.map((q) => {
+            const o = q.toObject();
+            return {
+                ...o,
+                questionCount: Array.isArray(q.questions) ? q.questions.length : 0,
+            };
+        });
+        res.status(200).json({ quizzes: payload });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
